@@ -21,7 +21,9 @@ def _shift_event(event, dt):
     return event
 
 
-def get_precipitation_events(df, df_original, k=0.3, diff_min=0.1, interval_length=3):
+def get_precipitation_events(df, k=0.3, diff_min=0.1, interval_length=3):
+    df_original = df.copy()
+    df = _move_avg(df_original, 2)
     diff_df = df.diff()
     diff_30_df = diff_df.quantile(axis=1, q=k)
     precip_idx = np.argwhere(diff_30_df > diff_min).flatten()
@@ -41,8 +43,10 @@ def get_precipitation_events(df, df_original, k=0.3, diff_min=0.1, interval_leng
             qk += 1
         if ((l_events[i + 1][0] - l[-1]) <= max(len(l_events[i + 1]), len(l)) and sum_sum >= 0) or (
             l_events[i + 1][0] - l[-1]) <= (len(l_events[i + 1]) + len(l)) / interval_length:
+            # The above if statement, why ((len(l_events[i + 1]) + len(l)) / interval_length)?
             l_events[i] = l_events[i] + range(l[-1] + 1, l_events[i + 1][0]) + l_events[i + 1]
             del l_events[i + 1]
+            # Why need i-=1?
             if i >= 2:
                 i -= 1
         else:
